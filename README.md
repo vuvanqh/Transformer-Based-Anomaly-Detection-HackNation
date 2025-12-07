@@ -1,74 +1,45 @@
-# Transformer-Based-Anomaly-Detection
-Transformer Based Anomaly Detection for RTG image
----
-System do **detekcji anomalii** na zdjęciach RTG pojazdów.  
-Wejściem jest pojedynczy obraz RTG (BMP), wyjściem – **heatmapa anomalii** nałożona na ten obraz.
+# Anomaly Detection
 
-Cały pipeline (tiling → feature extraction → anomaly scoring → stitching → overlay) jest zintegrowany w jednym skrypcie uruchamianym z linii komend.
----
+System do wykrywania lokalnych anomalii (np. broni, obcych obiektów) na zdjęciach rentgenowskich samochodów.  
+Program wykorzystuje:
 
-## 1. Cel systemu
+- **ViT (DINO)** jako ekstraktor cech,
+- **PatchCore** pamięć normalnych patchy (clear),
+- **rekonstrukcję heatmapy** z poziomu tilów do pełnego obrazu.
 
-- Zdjęcia RTG całych pojazdów są duże i pełne detali.
-- Obrazy „czyste” i „brudne” są **globalnie bardzo podobne** (co wyszło w EDA).
-- Różnice są **lokalne i subtelne** – małe skrytki, niestandardowe elementy, dopakowane fragmenty.
-
-System nie rozpoznaje konkretnych typów kontrabandy.  
-Zamiast tego uczy się, jak wygląda **normalny samochód**, i oznacza na heatmapie te miejsca, w których obraz **odstaje od wzorca normalności**.
+Wejście: jeden obraz `.bmp` z X-rayem auta  
+Wyjście: obraz z nałożoną heatmapą anomalii.
 
 ---
 
-## 2. Pipeline – high-level
+## Wymagania
 
-Dla jednego obrazu wejściowego:
+- Python **3.10+**
+- Karta graficzna z obsługą CUDA (opcjonalnie, ale mocno przyspiesza inferencję)
+- Zainstalowane pakiety:
 
-1. **Wczytanie obrazu RTG** (BMP).
-2. **Tiling** – podział obrazu na kafelki (np. 512×512 px z overlapem).
-3. **Preprocessing kafelków** pod Vision Transformer (RGB, resize, normalizacja).
-4. **Ekstrakcja cech ViT** dla każdego kafelka na poziomie patchy.
-5. **Projekcja PCA + porównanie do memory banku** (PatchCore-style anomaly detection).
-6. **Heatmapa per kafelek** – dystanse patchy upsamplowane do 512×512.
-7. **Stitching** – złożenie heatmap kafelków w jedną mapę w układzie współrzędnych oryginalnego obrazu.
-8. **Normalizacja + prógowanie** – wycięcie „szumu”, podbicie tylko najwyższych anomalii.
-9. **Overlay** – nałożenie heatmapy na wejściowy RTG i zapis wyniku jako obraz.
-
+  ```bash
+  pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121  # lub CPU-only wg instrukcji PyTorch
+  pip install timm scikit-learn numpy pillow opencv-python matplotlib tqdm
 ---
 
-## 3. Wymagania
+## Użycie
 
-### 3.1. Środowisko
-
-- Python 3.10+
-- Rekomendowana karta GPU z CUDA (działa też na CPU, ale wolniej).
-
-### 3.2. Biblioteki
-
-Minimalny zestaw (dopasuj do swojego `requirements.txt`):
-
-- `torch`, `torchvision`, `timm`
-- `numpy`, `scikit-learn`
-- `pillow`
-- `opencv-python`
-- `matplotlib` (dla colormap)
-
-### 3.3. Artefakty modelu
-
-Skrypt zakłada istnienie pre-wytrenowanych artefaktów (np. w katalogu `model_artifacts/`):
-
-- `pca.pkl` – PCA dopasowane do patchy z obrazów czystych,
-- `memory_bank.npy` – memory bank patchy „normalnych” po PCA,
-- konfiguracja modelu (np. parametry ViT, PCA_DIM, MEMORY_BANK_SIZE, K).
-
----
-
-## 4. Użycie
-
-Przykładowe wywołanie (dopasuj nazwę pliku do swojego skryptu):
-
+Aby skorzystać ze skryptu, upewnij się, że znajdujesz się w katalogu głównym repozytorium ("Transformer-Based-Anomaly-Detection-HackNation").
+Następnie, należy użyć komendy:
 ```bash
-python your_script.py \
-  --input path/to/input_image.bmp \
-  --output path/to/output_heatmap.bmp \
-  --device cuda \
-  --threshold-percentile 90
+python run.py --image <image-path.bmp> --out <output-path.bmp>
+```
+gdzie:
+- <image-path.bmp> to relatywna ścieżka do obrazu,
+- <output-path.bmp> to relatywna ścieżka do pliku z końcową heatmapą
 
+---
+
+### Autorzy
+
+Sylwia Rybak,
+Quoc Hoang Vu Van,
+Mateusz Szymkowiak,
+Antoni Poszkuta,
+Bartosz Czyż
