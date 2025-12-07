@@ -69,7 +69,7 @@ for image_rel_path, group in df.groupby("image_rel_path"):
         high = float(np.percentile(vals, 99.5))
 
         # próg "podejrzanych" – np. górne 10% wartości
-        thr  = float(np.percentile(vals, 98.0))
+        thr  = float(np.percentile(vals, 98.5))
     else:
         low, high, thr = 0.0, 1.0, 0.0
 
