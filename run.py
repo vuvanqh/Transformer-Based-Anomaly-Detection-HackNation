@@ -143,7 +143,7 @@ def make_heatmap(full_heat, base_img):
     vals = full_heat[full_heat > 0]
     low  = float(np.percentile(vals, 5))
     high = float(np.percentile(vals, 99.5))
-    thr  = float(np.percentile(vals, 90))
+    thr  = float(np.percentile(vals, 98.5))
 
     suppressed = full_heat.copy()
     suppressed[suppressed < thr] = low
